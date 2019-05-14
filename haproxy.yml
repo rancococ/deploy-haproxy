@@ -1,0 +1,22 @@
+##########################################################################
+# 部署配置文件(base)
+# 本配置文件(xx.yml)中的变量(${xxx})是从同级目录下的.env文件中读取的
+##########################################################################
+# compose支持的版本2
+version: "2"
+services:
+  # haproxy
+  haproxy:
+    image: ${IMAGE_HAPROXY}
+    container_name: "haproxy.${PRODUCT_NAME}.${COMPANY_NAME}"
+    hostname: "haproxy.${PRODUCT_NAME}.${COMPANY_NAME}"
+    restart: "always"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./volume/haproxy/conf/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./volume/haproxy/conf/server.pem:/usr/local/etc/haproxy/server.pem:ro
+    command: haproxy -f /usr/local/etc/haproxy/haproxy.cfg
+    network_mode: "host"
+    # cap_add:
+    #   - NET_ADMIN
+    #   - SYS_ADMIN
