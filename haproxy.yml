@@ -17,6 +17,8 @@ services:
       - ./volume/haproxy/conf/server.pem:/usr/local/etc/haproxy/server.pem:ro
     command: haproxy -f /usr/local/etc/haproxy/haproxy.cfg
     network_mode: "host"
+    extra_hosts:
+      - "haproxy.${PRODUCT_NAME}.${COMPANY_NAME}:${HOST_IP}"
     # cap_add:
     #   - NET_ADMIN
     #   - SYS_ADMIN
