@@ -7,7 +7,7 @@ version: "2"
 services:
   # haproxy
   haproxy:
-    image: ${IMAGE_HAPROXY}
+    image: ${IMAGE_REPO}/${IMAGE_HAPROXY}
     container_name: "haproxy.${PRODUCT_NAME}.${COMPANY_NAME}"
     hostname: "haproxy.${PRODUCT_NAME}.${COMPANY_NAME}"
     restart: "always"
