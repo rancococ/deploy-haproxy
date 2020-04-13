@@ -1,0 +1,28 @@
+{
+	\"monitor\": {
+		\"port\": \"${HAPROXY_MONITOR_PORT}\"
+	},
+	\"services\": [{
+		\"name\": \"${HAPROXY_SERVICE01_NAME}\",
+		\"port1\": \"${HAPROXY_SERVICE01_PORT1}\",
+		\"port2\": \"${HAPROXY_SERVICE01_PORT2}\",
+		\"servers\": [{
+			\"name\": \"${HAPROXY_SERVICE01_NODE01_NAME}\",
+			\"addr\": \"${HAPROXY_SERVICE01_NODE01_ADDR}\"
+		}, {
+			\"name\": \"${HAPROXY_SERVICE01_NODE02_NAME}\",
+			\"addr\": \"${HAPROXY_SERVICE01_NODE02_ADDR}\"
+		}]
+	}, {
+		\"name\": \"${HAPROXY_SERVICE02_NAME}\",
+		\"port1\": \"${HAPROXY_SERVICE02_PORT1}\",
+		\"port2\": \"${HAPROXY_SERVICE02_PORT2}\",
+		\"servers\": [{
+			\"name\": \"${HAPROXY_SERVICE02_NODE01_NAME}\",
+			\"addr\": \"${HAPROXY_SERVICE02_NODE01_ADDR}\"
+		}, {
+			\"name\": \"${HAPROXY_SERVICE02_NODE02_NAME}\",
+			\"addr\": \"${HAPROXY_SERVICE02_NODE02_ADDR}\"
+		}]
+	}]
+}

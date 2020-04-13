@@ -1,0 +1,102 @@
+# config for haproxy
+
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    log      127.0.0.1 local0 #[err warning info debug]
+    maxconn  20000
+    ulimit-n 41000
+    nbproc   4
+    daemon
+    tune.ssl.default-dh-param 2048
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode    http
+    log     global
+    option  httplog
+    option  dontlognull
+    #option  abortonclose
+    #option  forceclose
+    #option  httpclose
+    #option  http-server-close
+    option  nolinger
+    option  originalto
+    option  forwardfor except 127.0.0.0/8
+    option  redispatch
+    retries 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         5s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn 32000
+    balance roundrobin
+
+#---------------------------------------------------------------------
+# admin_status monitor
+#---------------------------------------------------------------------
+listen monitor
+    bind  *:{{with .monitor.port}}{{.}}{{else}}9000{{end}}
+    bind-process 1
+    mode  http
+    stats refresh 10s
+    stats enable
+    stats uri /admin?stats
+    stats realm haproxy\Statistics
+    stats auth admin:admin
+    stats hide-version
+    stats admin if TRUE
+
+    capture request  header Host           len 40
+    capture request  header Content-Length len 10
+    capture request  header Referer        len 200
+    capture response header Server         len 40
+    capture response header Content-Length len 10
+    capture response header Cache-Control  len 8
+
+{{- range .services}}
+
+#---------------------------------------------------------------------
+# frontend frontend_{{.name}}
+#---------------------------------------------------------------------
+frontend frontend_{{.name}}
+    bind            *:{{.port1}}
+    bind            *:{{.port2}} ssl crt /usr/local/etc/haproxy/server.pem
+    bind-process    4
+    mode            http
+    log             global
+    option          httplog
+    option          dontlognull
+    option          originalto
+    option          forwardfor
+    monitor-uri     /monitoruri
+    reqadd          X-Forwarded-Proto:\ https
+    maxconn         8000
+    timeout client  30s
+    stats uri       /admin/stats
+    default_backend backend_{{.name}}
+
+#---------------------------------------------------------------------
+# backend backend_{{.name}}
+#---------------------------------------------------------------------
+backend backend_{{.name}}
+    mode            http
+    balance         source
+    option          prefer-last-server
+    option          redispatch
+    retries         2
+    timeout connect 3s
+    timeout server  300s
+    option  httpchk HEAD /info?healthcheck=true
+    {{- range .servers}}
+    server          {{.name}} {{.addr}} check inter 2000
+    {{- end}}
+
+{{- end}}
