@@ -58,7 +58,7 @@ cd "${base_dir}"
 product_name="haproxy"
 product_version="1.9.15.1"
 images=(
-registry.cdjdgm.com/library/keepalived:1.9.15.1
+registry.cdjdgm.com/library/haproxy:1.9.15.1
 )
 temp_uuid="$(cat /proc/sys/kernel/random/uuid)"
 build_home="/tmp/build_${temp_uuid}"
