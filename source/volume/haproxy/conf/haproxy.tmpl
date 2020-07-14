@@ -18,15 +18,15 @@ global
 defaults
     mode    http
     log     global
-    option  httplog
+    #option  httplog
     option  dontlognull
     #option  abortonclose
     #option  forceclose
     #option  httpclose
     #option  http-server-close
     option  nolinger
-    option  originalto
-    option  forwardfor except 127.0.0.0/8
+    #option  originalto
+    #option  forwardfor except 127.0.0.0/8
     option  redispatch
     retries 3
     timeout http-request    10s
@@ -67,8 +67,7 @@ listen monitor
 # frontend frontend_{{.name}}
 #---------------------------------------------------------------------
 frontend frontend_{{.name}}
-    bind            *:{{.port1}}
-    bind            *:{{.port2}} ssl crt /usr/local/etc/haproxy/server.pem
+    bind            *:{{.port}} {{if eq .ssl "true"}}ssl crt /usr/local/etc/haproxy/server.pem{{end}}
     bind-process    4
     mode            http
     log             global
