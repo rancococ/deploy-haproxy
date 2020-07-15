@@ -7,7 +7,8 @@ global
     log      127.0.0.1 local0 #[err warning info debug]
     maxconn  20000
     ulimit-n 41000
-    nbproc   4
+    nbproc   2
+    stats bind-process 1
     daemon
     tune.ssl.default-dh-param 2048
 
@@ -40,19 +41,19 @@ defaults
     balance roundrobin
 
 #---------------------------------------------------------------------
-# admin_status monitor
+# listen admin
 #---------------------------------------------------------------------
-listen monitor
-    bind  *:{{with .monitor.port}}{{.}}{{else}}9000{{end}}
-    bind-process 1
-    mode  http
-    stats refresh 10s
-    stats enable
-    stats uri /admin?stats
-    stats realm haproxy\Statistics
-    stats auth admin:admin
-    stats hide-version
-    stats admin if TRUE
+listen admin
+    bind            *:{{with .admin.port}}{{.}}{{else}}9000{{end}}
+    bind-process    1
+    mode            http
+    stats           enable
+    stats           hide-version
+    stats refresh   10s
+    stats uri       /admin?stats
+    stats realm     haproxy\Statistics
+    stats auth      {{.admin.user}}:{{.admin.pass}}
+    stats admin     if TRUE
 
     capture request  header Host           len 40
     capture request  header Content-Length len 10
@@ -63,12 +64,32 @@ listen monitor
 
 {{- range .services}}
 
+{{- if eq .mode "tcp"}}
+
+#---------------------------------------------------------------------
+# listen {{.name}}
+#---------------------------------------------------------------------
+listen {{.name}}
+    bind            *:{{.port.tcp}}
+    bind-process    1-4
+    mode            tcp
+    balance         source
+    option          redispatch
+    {{- range $i, $v := .servers}}
+    {{- if $v.addr}}
+    server          node_{{$i}} {{$v.addr}} check inter 3000
+    {{- end}}
+    {{- end}}
+
+{{- else if eq .mode "http"}}
+
 #---------------------------------------------------------------------
 # frontend frontend_{{.name}}
 #---------------------------------------------------------------------
 frontend frontend_{{.name}}
-    bind            *:{{.port}} {{if eq .ssl "true"}}ssl crt /usr/local/etc/haproxy/server.pem{{end}}
-    bind-process    4
+    bind            *:{{.port.http}}
+    bind            *:{{.port.https}} ssl crt /usr/local/etc/haproxy/server.pem
+    bind-process    1-4
     mode            http
     log             global
     option          httplog
@@ -86,6 +107,7 @@ frontend frontend_{{.name}}
 # backend backend_{{.name}}
 #---------------------------------------------------------------------
 backend backend_{{.name}}
+    bind-process    1-4
     mode            http
     balance         source
     option          prefer-last-server
@@ -94,8 +116,11 @@ backend backend_{{.name}}
     timeout connect 3s
     timeout server  300s
     option  httpchk HEAD /info?healthcheck=true
-    {{- range .servers}}
-    server          {{.name}} {{.addr}} check inter 2000
+    {{- range $i, $v := .servers}}
+    {{- if $v.addr}}
+    server          node_{{$i}} {{$v.addr}} check inter 3000
+    {{- end}}
     {{- end}}
 
+{{- end}}
 {{- end}}

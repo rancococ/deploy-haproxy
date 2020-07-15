@@ -15,9 +15,9 @@ services:
       - ./haproxy.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      #- ./volume/haproxy/conf/haproxy.tmpl:/usr/local/etc/haproxy/haproxy.tmpl:ro
-      #- ./volume/haproxy/conf/haproxy.temp:/usr/local/etc/haproxy/haproxy.temp:ro
-      - ./volume/haproxy/conf/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./volume/haproxy/conf/haproxy.tmpl:/usr/local/etc/haproxy/haproxy.tmpl:ro
+      - ./volume/haproxy/conf/haproxy.temp:/usr/local/etc/haproxy/haproxy.temp:ro
+      #- ./volume/haproxy/conf/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
       - ./volume/haproxy/conf/server.pem:/usr/local/etc/haproxy/server.pem:ro
     command: haproxy -f /usr/local/etc/haproxy/haproxy.cfg
     network_mode: "host"

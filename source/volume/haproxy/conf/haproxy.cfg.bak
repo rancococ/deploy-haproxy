@@ -4,14 +4,11 @@
 # Global settings
 #---------------------------------------------------------------------
 global
+    log      127.0.0.1 local0 #[err warning info debug]
     maxconn  20000
     ulimit-n 41000
-    nbproc   4
-    cpu-map 1 0
-    cpu-map 2 1
-    cpu-map 3 2
-    cpu-map 4 3
-    stats bind-process 4
+    nbproc   2
+    stats bind-process 1
     daemon
     tune.ssl.default-dh-param 2048
 
@@ -44,19 +41,19 @@ defaults
     balance roundrobin
 
 #---------------------------------------------------------------------
-# admin_status monitor
+# listen admin
 #---------------------------------------------------------------------
-listen admin_status
-    bind  *:9000
-    bind-process 4
-    mode  http
-    stats refresh 10s
-    stats enable
-    stats uri /admin?stats
-    stats realm haproxy\Statistics
-    stats auth admin:admin
-    stats hide-version
-    stats admin if TRUE
+listen admin
+    bind            *:9000
+    bind-process    1
+    mode            http
+    stats           enable
+    stats           hide-version
+    stats refresh   10s
+    stats uri       /admin?stats
+    stats realm     haproxy\Statistics
+    stats auth      admin:admin
+    stats admin     if TRUE
 
     capture request  header Host           len 40
     capture request  header Content-Length len 10
@@ -66,20 +63,20 @@ listen admin_status
     capture response header Cache-Control  len 8
 
 #---------------------------------------------------------------------
-# listen media 554
+# listen media
 #---------------------------------------------------------------------
-listen media_554
+listen media
     bind            *:554
     bind-process    1-4
     mode            tcp
     balance         source
     option          redispatch
-    server          server01 192.168.180.188:554 check inter 5s
+    server          server01 192.168.180.188:554 check inter 2000
 
 #---------------------------------------------------------------------
-# frontend frontend_webserver01
+# frontend frontend_web01
 #---------------------------------------------------------------------
-frontend frontend_webserver01
+frontend frontend_web01
     bind            *:8080
     bind            *:8443 ssl crt /usr/local/etc/haproxy/server.pem
     bind-process    1-4
@@ -94,12 +91,13 @@ frontend frontend_webserver01
     maxconn         8000
     timeout client  30s
     stats uri       /admin/stats
-    default_backend backend_webserver01
+    default_backend backend_web01
 
 #---------------------------------------------------------------------
-# backend backend_webserver01
+# backend backend_web01
 #---------------------------------------------------------------------
-backend backend_webserver01
+backend backend_web01
+    bind-process    1-4
     mode            http
     balance         source
     option          prefer-last-server
@@ -109,4 +107,4 @@ backend backend_webserver01
     timeout server  300s
     option  httpchk HEAD /info?healthcheck=true
     server          server01 192.168.8.236:8080 check inter 2000
-    server          server02 192.168.8.237:8080 check inter 2000
+    #server          server02 192.168.8.237:8080 check inter 2000

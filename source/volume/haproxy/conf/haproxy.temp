@@ -1,28 +1,73 @@
 {
-	\"monitor\": {
-		\"port\": \"${HAPROXY_MONITOR_PORT}\"
+	\"admin\": {
+		\"port\": \"${HAPROXY_ADMIN_PORT}\",
+		\"user\": \"${HAPROXY_ADMIN_USER}\",
+		\"pass\": \"${HAPROXY_ADMIN_PASS}\"
 	},
 	\"services\": [{
+		\"mode\": \"${HAPROXY_SERVICE01_MODE}\",
 		\"name\": \"${HAPROXY_SERVICE01_NAME}\",
-		\"port\": \"${HAPROXY_SERVICE01_PORT}\",
-		\"ssl\": \"${HAPROXY_SERVICE01_SSL}\",
+		\"port\": {
+			\"tcp\":   \"${HAPROXY_SERVICE01_PORT_TCP}\",
+			\"http\":  \"${HAPROXY_SERVICE01_PORT_HTTP}\",
+			\"https\": \"${HAPROXY_SERVICE01_PORT_HTTPS}\"
+		},
 		\"servers\": [{
-			\"name\": \"${HAPROXY_SERVICE01_NODE01_NAME}\",
 			\"addr\": \"${HAPROXY_SERVICE01_NODE01_ADDR}\"
 		}, {
-			\"name\": \"${HAPROXY_SERVICE01_NODE02_NAME}\",
 			\"addr\": \"${HAPROXY_SERVICE01_NODE02_ADDR}\"
 		}]
 	}, {
+		\"mode\": \"${HAPROXY_SERVICE02_MODE}\",
 		\"name\": \"${HAPROXY_SERVICE02_NAME}\",
-		\"port\": \"${HAPROXY_SERVICE02_PORT}\",
-		\"ssl\": \"${HAPROXY_SERVICE02_SSL}\",
+		\"port\": {
+			\"tcp\":   \"${HAPROXY_SERVICE02_PORT_TCP}\",
+			\"http\":  \"${HAPROXY_SERVICE02_PORT_HTTP}\",
+			\"https\": \"${HAPROXY_SERVICE02_PORT_HTTPS}\"
+		},
 		\"servers\": [{
-			\"name\": \"${HAPROXY_SERVICE02_NODE01_NAME}\",
 			\"addr\": \"${HAPROXY_SERVICE02_NODE01_ADDR}\"
 		}, {
-			\"name\": \"${HAPROXY_SERVICE02_NODE02_NAME}\",
 			\"addr\": \"${HAPROXY_SERVICE02_NODE02_ADDR}\"
+		}]
+	}, {
+		\"mode\": \"${HAPROXY_SERVICE03_MODE}\",
+		\"name\": \"${HAPROXY_SERVICE03_NAME}\",
+		\"port\": {
+			\"tcp\":   \"${HAPROXY_SERVICE03_PORT_TCP}\",
+			\"http\":  \"${HAPROXY_SERVICE03_PORT_HTTP}\",
+			\"https\": \"${HAPROXY_SERVICE03_PORT_HTTPS}\"
+		},
+		\"servers\": [{
+			\"addr\": \"${HAPROXY_SERVICE03_NODE01_ADDR}\"
+		}, {
+			\"addr\": \"${HAPROXY_SERVICE03_NODE02_ADDR}\"
+		}]
+	}, {
+		\"mode\": \"${HAPROXY_SERVICE04_MODE}\",
+		\"name\": \"${HAPROXY_SERVICE04_NAME}\",
+		\"port\": {
+			\"tcp\":   \"${HAPROXY_SERVICE04_PORT_TCP}\",
+			\"http\":  \"${HAPROXY_SERVICE04_PORT_HTTP}\",
+			\"https\": \"${HAPROXY_SERVICE04_PORT_HTTPS}\"
+		},
+		\"servers\": [{
+			\"addr\": \"${HAPROXY_SERVICE04_NODE01_ADDR}\"
+		}, {
+			\"addr\": \"${HAPROXY_SERVICE04_NODE02_ADDR}\"
+		}]
+	}, {
+		\"mode\": \"${HAPROXY_SERVICE05_MODE}\",
+		\"name\": \"${HAPROXY_SERVICE05_NAME}\",
+		\"port\": {
+			\"tcp\":   \"${HAPROXY_SERVICE05_PORT_TCP}\",
+			\"http\":  \"${HAPROXY_SERVICE05_PORT_HTTP}\",
+			\"https\": \"${HAPROXY_SERVICE05_PORT_HTTPS}\"
+		},
+		\"servers\": [{
+			\"addr\": \"${HAPROXY_SERVICE05_NODE01_ADDR}\"
+		}, {
+			\"addr\": \"${HAPROXY_SERVICE05_NODE02_ADDR}\"
 		}]
 	}]
 }
