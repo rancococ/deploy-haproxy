@@ -4,12 +4,19 @@
 # Global settings
 #---------------------------------------------------------------------
 global
-    log      127.0.0.1 local0 #[err warning info debug]
-    maxconn  20000
-    ulimit-n 41000
-    nbproc   2
     daemon
-    tune.ssl.default-dh-param 2048
+    log                        127.0.0.1 local0
+    nbproc                     4
+    ulimit-n                   1024000
+    max-spread-checks          1000ms
+    maxconn                    500000
+    maxconnrate                500000
+    maxsessrate                500000
+    maxsslconn                 500000
+    maxsslrate                 500000
+    #maxsock=10(default)+global.maxconn*2+global.maxpipes*2+bind+check
+    #maxconn<(ulimit-n/2)
+    tune.ssl.default-dh-param  2048
 
 #---------------------------------------------------------------------
 # common defaults that all the 'listen' and 'backend' sections will
@@ -18,6 +25,7 @@ global
 defaults
     mode    http
     log     global
+    maxconn 500000
     #option  httplog
     option  dontlognull
     #option  abortonclose
@@ -28,6 +36,8 @@ defaults
     #option  originalto
     #option  forwardfor except 127.0.0.0/8
     option  redispatch
+    option  clitcpka
+    option  srvtcpka
     retries 3
     timeout http-request    10s
     timeout queue           1m
@@ -36,24 +46,23 @@ defaults
     timeout server          1m
     timeout http-keep-alive 10s
     timeout check           10s
-    maxconn 32000
     balance roundrobin
 
 #---------------------------------------------------------------------
 # listen admin
 #---------------------------------------------------------------------
 listen admin
-    bind            *:{{with .admin.port}}{{.}}{{else}}9000{{end}}
-    bind-process    1
-    mode            http
-    stats           enable
-    stats           hide-version
-    stats refresh   10s
-    stats uri       /admin?stats
-    stats realm     haproxy\Statistics
-    stats auth      {{.admin.user}}:{{.admin.pass}}
-    stats admin     if TRUE
-
+    bind             *:{{with .admin.port}}{{.}}{{else}}9000{{end}}
+    bind-process     1
+    mode             http
+    maxconn          100
+    stats            enable
+    stats            hide-version
+    stats            refresh 10s
+    stats            uri /admin?stats
+    stats            realm haproxy\Statistics
+    stats            auth {{.admin.user}}:{{.admin.pass}}
+    stats            admin if TRUE
     capture request  header Host           len 40
     capture request  header Content-Length len 10
     capture request  header Referer        len 200
@@ -72,7 +81,10 @@ listen {{.name}}
     bind            *:{{.port.tcp}}
     bind-process    1-4
     mode            tcp
-    balance         source
+    balance         roundrobin
+    option          tcplog
+    option          dontlognull
+    option          nolinger
     option          redispatch
     {{- range $i, $v := .servers}}
     {{- if $v.addr}}
@@ -90,14 +102,13 @@ frontend frontend_{{.name}}
     bind            *:{{.port.https}} ssl crt /usr/local/etc/haproxy/server.pem
     bind-process    1-4
     mode            http
-    log             global
     option          httplog
     option          dontlognull
+    option          nolinger
     option          originalto
-    option          forwardfor
+    option          forwardfor except 127.0.0.0/8
     monitor-uri     /monitoruri
     reqadd          X-Forwarded-Proto:\ https
-    maxconn         8000
     timeout client  30s
     stats uri       /admin/stats
     default_backend backend_{{.name}}
@@ -111,7 +122,7 @@ backend backend_{{.name}}
     balance         source
     option          prefer-last-server
     option          redispatch
-    retries         2
+    retries         3
     timeout connect 3s
     timeout server  300s
     option  httpchk HEAD /info?healthcheck=true

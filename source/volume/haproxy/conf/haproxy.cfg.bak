@@ -4,13 +4,19 @@
 # Global settings
 #---------------------------------------------------------------------
 global
-    log      127.0.0.1 local0 #[err warning info debug]
-    maxconn  20000
-    ulimit-n 41000
-    nbproc   2
-    stats bind-process 1
     daemon
-    tune.ssl.default-dh-param 2048
+    log                        127.0.0.1 local0
+    nbproc                     4
+    ulimit-n                   1024000
+    max-spread-checks          1000ms
+    maxconn                    500000
+    maxconnrate                500000
+    maxsessrate                500000
+    maxsslconn                 500000
+    maxsslrate                 500000
+    #maxsock=10(default)+global.maxconn*2+global.maxpipes*2+bind+check
+    #maxconn<(ulimit-n/2)
+    tune.ssl.default-dh-param  2048
 
 #---------------------------------------------------------------------
 # common defaults that all the 'listen' and 'backend' sections will
@@ -19,6 +25,7 @@ global
 defaults
     mode    http
     log     global
+    maxconn 500000
     #option  httplog
     option  dontlognull
     #option  abortonclose
@@ -29,6 +36,8 @@ defaults
     #option  originalto
     #option  forwardfor except 127.0.0.0/8
     option  redispatch
+    option  clitcpka
+    option  srvtcpka
     retries 3
     timeout http-request    10s
     timeout queue           1m
@@ -37,24 +46,23 @@ defaults
     timeout server          1m
     timeout http-keep-alive 10s
     timeout check           10s
-    maxconn 32000
     balance roundrobin
 
 #---------------------------------------------------------------------
 # listen admin
 #---------------------------------------------------------------------
 listen admin
-    bind            *:9000
-    bind-process    1
-    mode            http
-    stats           enable
-    stats           hide-version
-    stats refresh   10s
-    stats uri       /admin?stats
-    stats realm     haproxy\Statistics
-    stats auth      admin:admin
-    stats admin     if TRUE
-
+    bind             *:19080
+    bind-process     1
+    mode             http
+    maxconn          100
+    stats            enable
+    stats            hide-version
+    stats            refresh 10s
+    stats            uri /admin?stats
+    stats            realm haproxy\Statistics
+    stats            auth admin:admin
+    stats            admin if TRUE
     capture request  header Host           len 40
     capture request  header Content-Length len 10
     capture request  header Referer        len 200
@@ -71,40 +79,39 @@ listen media
     mode            tcp
     balance         source
     option          redispatch
-    server          server01 192.168.180.188:554 check inter 2000
+    server          server01 192.168.180.188:554 check inter 3000
 
 #---------------------------------------------------------------------
-# frontend frontend_web01
+# frontend frontend_web
 #---------------------------------------------------------------------
-frontend frontend_web01
+frontend frontend_web
     bind            *:8080
-    bind            *:8443 ssl crt /usr/local/etc/haproxy/server.pem
+    bind            *:8843 ssl crt /usr/local/etc/haproxy/server.pem
     bind-process    1-4
     mode            http
-    log             global
     option          httplog
     option          dontlognull
+    option          nolinger
     option          originalto
-    option          forwardfor
+    option          forwardfor except 127.0.0.0/8
     monitor-uri     /monitoruri
     reqadd          X-Forwarded-Proto:\ https
-    maxconn         8000
     timeout client  30s
     stats uri       /admin/stats
-    default_backend backend_web01
+    default_backend backend_web
 
 #---------------------------------------------------------------------
-# backend backend_web01
+# backend backend_web
 #---------------------------------------------------------------------
-backend backend_web01
+backend backend_web
     bind-process    1-4
     mode            http
     balance         source
     option          prefer-last-server
     option          redispatch
-    retries         2
+    retries         3
     timeout connect 3s
     timeout server  300s
     option  httpchk HEAD /info?healthcheck=true
-    server          server01 192.168.8.236:8080 check inter 2000
-    #server          server02 192.168.8.237:8080 check inter 2000
+    server          node1 172.31.253.2:8081 check inter 3000
+    server          node2 172.31.253.3:8081 check inter 3000
